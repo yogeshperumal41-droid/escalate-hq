@@ -152,8 +152,8 @@ const MyComplaintsPage = () => {
       ) : (
         <div className="space-y-4">
           {filteredComplaints.map((c) => {
-            const remainingHours = c.status === 'Open' ? getRemainingSlaHours(c.createdAt) : null;
-            const categoryStyle = getCategoryBadgeStyle(c.category);
+            const remainingHours = c.status === 'Open' ? getRemainingSlaHours(c.createdAt, c.status) : null;
+            const categoryStyle = getCategoryColor(c.category);
 
             return (
               <div

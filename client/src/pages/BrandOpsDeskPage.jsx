@@ -22,6 +22,7 @@ import { formatDate, timeAgo, getRemainingSlaHours, getCategoryColor } from '../
 const BrandOpsDeskPage = () => {
   const { user } = useAuth();
   const [complaints, setComplaints] = useState([]);
+  const [brandInfo, setBrandInfo] = useState(user?.brandId || null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('All');
   const [resolvingComplaint, setResolvingComplaint] = useState(null);
@@ -31,7 +32,12 @@ const BrandOpsDeskPage = () => {
     try {
       const res = await complaintService.getMyBrandComplaints();
       if (res.data.success) {
-        setComplaints(res.data.complaints);
+        setComplaints(res.data.complaints || []);
+        if (res.data.brand) {
+          setBrandInfo(res.data.brand);
+        } else if (res.data.complaints?.[0]?.brandId) {
+          setBrandInfo(res.data.complaints[0].brandId);
+        }
       }
     } catch (err) {
       console.error('Failed to load brand complaints:', err);
@@ -41,8 +47,11 @@ const BrandOpsDeskPage = () => {
   };
 
   useEffect(() => {
+    if (user?.brandId) {
+      setBrandInfo(user.brandId);
+    }
     fetchBrandComplaints();
-  }, []);
+  }, [user]);
 
   const handleResolveSuccess = (updatedComplaint) => {
     setComplaints((prev) =>
@@ -60,10 +69,29 @@ const BrandOpsDeskPage = () => {
     return c.status === statusFilter;
   });
 
-  const brandInfo = user?.brandId || (complaints[0] && complaints[0].brandId);
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen bg-slate-50">
+      {/* Unassigned Warning Banner */}
+      {!brandInfo && !loading && (
+        <div className="p-4 mb-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div>
+              <p className="font-bold text-sm">No Brand Linked to this Account</p>
+              <p className="text-amber-700 mt-0.5">
+                An administrator can bind your account to a parent brand (e.g. Indian Oil, Domino's, SBI) in the Admin Control Panel.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admin"
+            className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs"
+          >
+            Assign Brand in Admin
+          </Link>
+        </div>
+      )}
+
       {/* Brand Header Banner */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -182,8 +210,8 @@ const BrandOpsDeskPage = () => {
       ) : (
         <div className="space-y-4">
           {filteredComplaints.map((c) => {
-            const remainingHours = c.status === 'Open' ? getRemainingSlaHours(c.createdAt) : null;
-            const categoryStyle = getCategoryBadgeStyle(c.category);
+            const remainingHours = c.status === 'Open' ? getRemainingSlaHours(c.createdAt, c.status) : null;
+            const categoryStyle = getCategoryColor(c.category);
 
             return (
               <div

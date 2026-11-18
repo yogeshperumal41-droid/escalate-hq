@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('escalate_token', res.data.token);
         setToken(res.data.token);
         setUser(res.data.user);
-        return { success: true };
+        return { success: true, user: res.data.user };
       }
       return { success: false, message: 'Login failed' };
     } catch (err) {
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('escalate_token', res.data.token);
         setToken(res.data.token);
         setUser(res.data.user);
-        return { success: true };
+        return { success: true, user: res.data.user };
       }
       return { success: false, message: 'Registration failed' };
     } catch (err) {

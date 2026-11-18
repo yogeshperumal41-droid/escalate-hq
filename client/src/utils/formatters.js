@@ -26,8 +26,8 @@ export const timeAgo = (dateString) => {
   return 'Just now';
 };
 
-export const getRemainingSlaHours = (createdAt, status) => {
-  if (status !== 'Open') return null;
+export const getRemainingSlaHours = (createdAt, status = 'Open') => {
+  if (status && status !== 'Open') return null;
   const created = new Date(createdAt).getTime();
   const fortyEightHoursMs = 48 * 60 * 60 * 1000;
   const deadline = created + fortyEightHoursMs;
@@ -66,3 +66,5 @@ export const getCategoryColor = (category) => {
       };
   }
 };
+
+export const getCategoryBadgeStyle = getCategoryColor;

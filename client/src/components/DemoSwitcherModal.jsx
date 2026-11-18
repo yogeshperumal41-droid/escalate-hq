@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserCheck, Shield, Building, X, Sparkles } from 'lucide-react';
 
@@ -39,13 +40,23 @@ const ACCOUNTS = [
 ];
 
 const DemoSwitcherModal = () => {
+  const navigate = useNavigate();
   const { showDemoModal, setShowDemoModal, login, user } = useAuth();
 
   if (!showDemoModal) return null;
 
   const handleSelectAccount = async (account) => {
-    await login(account.email, account.password);
+    const res = await login(account.email, account.password);
     setShowDemoModal(false);
+    if (res.success) {
+      if (account.role === 'brandowner') {
+        navigate('/brand-desk');
+      } else if (account.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/my-complaints');
+      }
+    }
   };
 
   return (

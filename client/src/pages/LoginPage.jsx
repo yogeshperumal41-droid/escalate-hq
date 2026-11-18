@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShieldAlert, LogIn, AlertCircle, Sparkles, User, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -19,7 +20,16 @@ const LoginPage = () => {
 
     const res = await login(email, password);
     if (res.success) {
-      navigate('/');
+      const from = location.state?.from?.pathname || location.state?.from;
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (res.user?.role === 'brandowner') {
+        navigate('/brand-desk', { replace: true });
+      } else if (res.user?.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/my-complaints', { replace: true });
+      }
     } else {
       setError(res.message);
     }
@@ -57,23 +67,23 @@ const LoginPage = () => {
               className="text-left px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-800 transition-colors flex items-center justify-between text-[11px] border border-slate-200 shadow-xs"
             >
               <span className="font-semibold">Consumer (Priya)</span>
-              <span className="text-slate-500 font-mono">user</span>
+              <span className="text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded font-mono font-bold">user</span>
             </button>
             <button
               type="button"
-              onClick={() => fillDemo('grievance.lead@dominos.com', 'password123')}
+              onClick={() => fillDemo('owner.indianoil@example.com', 'password123')}
               className="text-left px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-800 transition-colors flex items-center justify-between text-[11px] border border-slate-200 shadow-xs"
             >
-              <span className="font-semibold">Domino's Grievance Desk</span>
-              <span className="text-slate-500 font-mono">brand_admin</span>
+              <span className="font-semibold">Indian Oil Corporate Desk</span>
+              <span className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded font-mono font-bold">brandowner</span>
             </button>
             <button
               type="button"
               onClick={() => fillDemo('admin@escalatehq.org', 'password123')}
               className="text-left px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-800 transition-colors flex items-center justify-between text-[11px] border border-slate-200 shadow-xs"
             >
-              <span className="font-semibold">EscalateHQ Auditor</span>
-              <span className="text-slate-500 font-mono">super_admin</span>
+              <span className="font-semibold">EscalateHQ Platform Auditor</span>
+              <span className="text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded font-mono font-bold">admin</span>
             </button>
           </div>
         </div>

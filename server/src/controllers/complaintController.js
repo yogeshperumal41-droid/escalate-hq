@@ -404,9 +404,12 @@ const getMyComplaints = async (req, res, next) => {
 const getMyBrandComplaints = async (req, res, next) => {
   try {
     if (!req.user.brandId) {
-      return res.status(400).json({
-        success: false,
-        message: 'No parent brand is linked to this brandowner account.',
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        brand: null,
+        complaints: [],
+        message: 'No parent brand is currently linked to this brandowner account.',
       });
     }
 
@@ -426,6 +429,7 @@ const getMyBrandComplaints = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: complaints.length,
+      brand: req.user.brandId,
       complaints,
     });
   } catch (error) {
@@ -455,8 +459,8 @@ const resolveComplaintByBrandOwner = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Complaint not found' });
     }
 
-    const userBrandId = (req.user.brandId._id || req.user.brandId).toString();
-    const complaintBrandId = complaint.brandId.toString();
+    const userBrandId = (req.user.brandId?._id || req.user.brandId)?.toString();
+    const complaintBrandId = (complaint.brandId?._id || complaint.brandId)?.toString();
 
     if (userBrandId !== complaintBrandId) {
       return res.status(403).json({
