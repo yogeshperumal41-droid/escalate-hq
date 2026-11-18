@@ -33,7 +33,7 @@ const register = async (req, res, next) => {
     }
 
     let brandId = null;
-    if (role === 'brand_admin' && brandSlug) {
+    if (role === 'brandowner' && brandSlug) {
       const brand = await Brand.findOne({ slug: brandSlug.toLowerCase() });
       if (brand) brandId = brand._id;
     }
@@ -43,22 +43,23 @@ const register = async (req, res, next) => {
       name,
       email: email.toLowerCase(),
       passwordHash,
-      role: ['user', 'brand_admin', 'super_admin'].includes(role) ? role : 'user',
+      role: ['user', 'brandowner', 'admin'].includes(role) ? role : 'user',
       brandId,
     });
 
+    const populatedUser = await User.findById(user._id).populate('brandId', 'name slug category logoUrl');
     const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
       token,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        brandId: user.brandId,
-        createdAt: user.createdAt,
+        id: populatedUser._id,
+        name: populatedUser.name,
+        email: populatedUser.email,
+        role: populatedUser.role,
+        brandId: populatedUser.brandId,
+        createdAt: populatedUser.createdAt,
       },
     });
   } catch (error) {
@@ -82,7 +83,9 @@ const login = async (req, res, next) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select('+passwordHash')
+      .populate('brandId', 'name slug category logoUrl');
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -143,21 +146,21 @@ const getDemoAccounts = async (req, res) => {
         label: 'Consumer / Complainant',
         email: 'priya.sharma@example.com',
         password: 'password123',
-        description: 'Files grievances with GPS proof & tracks resolution',
+        description: 'Files grievances with GPS proof & tracks personal cases',
       },
       {
-        role: 'brand_admin',
-        label: "Domino's Grievance Desk",
-        email: 'grievance.lead@dominos.com',
+        role: 'brandowner',
+        label: 'Indian Oil Brand Owner Desk',
+        email: 'owner.indianoil@example.com',
         password: 'password123',
-        description: 'Franchise corporate desk to review & resolve tickets',
+        description: 'Franchise corporate desk to review & resolve brand tickets',
       },
       {
-        role: 'super_admin',
+        role: 'admin',
         label: 'EscalateHQ Platform Admin',
         email: 'admin@escalatehq.org',
         password: 'password123',
-        description: 'Full transparency auditor & SLA supervisor',
+        description: 'Platform auditor: manages brands, users, and ticket moderation',
       },
     ],
   });

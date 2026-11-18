@@ -102,9 +102,9 @@ const RegisterPage = () => {
               onChange={(e) => setRole(e.target.value)}
               className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-rose-500 hover:border-slate-400 transition-colors"
             >
-              <option value="user">Consumer / Complainant</option>
-              <option value="brand_admin">Franchise Brand Admin / Grievance Officer</option>
-              <option value="super_admin">EscalateHQ Platform Auditor</option>
+              <option value="user">Regular Customer (user)</option>
+              <option value="brandowner">Brand Owner (brandowner)</option>
+              <option value="admin">Platform Admin (admin)</option>
             </select>
           </div>
 

@@ -15,6 +15,7 @@ const brandRoutes = require('./routes/brandRoutes');
 const branchRoutes = require('./routes/branchRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const statsRoutes = require('./routes/statsRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const User = require('./models/User');
 const seedDatabase = require('./utils/seedData');
@@ -52,6 +53,7 @@ app.use('/api/brands', brandRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error Middlewares
 app.use(notFound);

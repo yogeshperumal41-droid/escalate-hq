@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ChevronRight, Mail, PlusCircle } from 'lucide-react';
+import { Search, ChevronRight, Mail, PlusCircle, Building, Sliders } from 'lucide-react';
 import { brandService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = [
   'All',
@@ -14,6 +15,7 @@ const CATEGORIES = [
 ];
 
 const BrandsListPage = () => {
+  const { user } = useAuth();
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('All');
@@ -54,13 +56,31 @@ const BrandsListPage = () => {
           </p>
         </div>
 
-        <Link
-          to="/report"
-          className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-rose-200"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>File Complaint</span>
-        </Link>
+        {user?.role === 'brandowner' ? (
+          <Link
+            to="/brand-desk"
+            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+          >
+            <Building className="w-4 h-4" />
+            <span>Brand Ops Desk</span>
+          </Link>
+        ) : user?.role === 'admin' ? (
+          <Link
+            to="/admin"
+            className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-rose-200"
+          >
+            <Sliders className="w-4 h-4" />
+            <span>Manage Brands in Admin Desk</span>
+          </Link>
+        ) : (
+          <Link
+            to="/report"
+            className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-rose-200"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>File Complaint</span>
+          </Link>
+        )}
       </div>
 
       {/* Filter & Search Bar */}

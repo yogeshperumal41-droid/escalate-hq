@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { complaintService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
-const ResolveModal = ({ complaint, isOpen, onClose, onSuccess }) => {
+const ResolveModal = ({ complaint, isOpen = true, onClose, onSuccess }) => {
+  const { user } = useAuth();
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [tokenInput, setTokenInput] = useState(complaint?.resolveToken || '');
   const [loading, setLoading] = useState(false);
@@ -21,11 +23,16 @@ const ResolveModal = ({ complaint, isOpen, onClose, onSuccess }) => {
     setError('');
 
     try {
-      const res = await complaintService.updateStatus(complaint._id, {
-        status: 'Resolved',
-        resolutionNotes,
-        token: tokenInput || complaint.resolveToken,
-      });
+      let res;
+      if (user?.role === 'brandowner') {
+        res = await complaintService.resolveMyBrandComplaint(complaint._id, { resolutionNotes });
+      } else {
+        res = await complaintService.updateStatus(complaint._id, {
+          status: 'Resolved',
+          resolutionNotes,
+          token: tokenInput || complaint.resolveToken,
+        });
+      }
 
       if (res.data.success) {
         onSuccess(res.data.complaint);

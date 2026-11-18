@@ -12,8 +12,10 @@ import {
 import ComplaintCard from '../components/ComplaintCard';
 import ResolveModal from '../components/ResolveModal';
 import { brandService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const BrandScorecardPage = () => {
+  const { user } = useAuth();
   const { slug } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -119,14 +121,30 @@ const BrandScorecardPage = () => {
               </div>
             </div>
 
-            {/* Action */}
-            <Link
-              to="/report"
-              className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-200 flex items-center gap-2 transition-all shrink-0"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Report Issue at {brand.name}</span>
-            </Link>
+            {/* Role-sensitive Action */}
+            {user?.role === 'brandowner' ? (
+              <Link
+                to="/brand-desk"
+                className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md flex items-center gap-2 transition-all shrink-0"
+              >
+                <span>Brand Ops Desk</span>
+              </Link>
+            ) : user?.role === 'admin' ? (
+              <Link
+                to="/admin"
+                className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-200 flex items-center gap-2 transition-all shrink-0"
+              >
+                <span>Moderate in Admin Desk</span>
+              </Link>
+            ) : (
+              <Link
+                to="/report"
+                className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-200 flex items-center gap-2 transition-all shrink-0"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Report Issue at {brand.name}</span>
+              </Link>
+            )}
           </div>
 
           {/* Key KPI Stats Grid */}

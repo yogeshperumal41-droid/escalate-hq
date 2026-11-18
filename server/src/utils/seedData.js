@@ -25,7 +25,7 @@ const seedDatabase = async () => {
     const defaultPassword = 'password123';
     const passwordHash = await User.hashPassword(defaultPassword);
 
-    const [user1, user2, brandAdmin, superAdmin] = await User.create([
+    const [user1, user2, brandOwner, adminUser] = await User.create([
       {
         name: 'Priya Sharma',
         email: 'priya.sharma@example.com',
@@ -39,16 +39,16 @@ const seedDatabase = async () => {
         role: 'user',
       },
       {
-        name: 'Grievance Desk Lead (Domino\'s)',
-        email: 'grievance.lead@dominos.com',
+        name: 'Indian Oil Corporate Desk',
+        email: 'owner.indianoil@example.com',
         passwordHash,
-        role: 'brand_admin',
+        role: 'brandowner',
       },
       {
-        name: 'EscalateHQ Auditor',
+        name: 'EscalateHQ Platform Auditor',
         email: 'admin@escalatehq.org',
         passwordHash,
-        role: 'super_admin',
+        role: 'admin',
       },
     ]);
 
@@ -106,8 +106,8 @@ const seedDatabase = async () => {
       },
     ]);
 
-    // Link brand admin to Dominos brand
-    await User.findByIdAndUpdate(brandAdmin._id, { brandId: dominos._id });
+    // Link brand owner to Indian Oil brand
+    await User.findByIdAndUpdate(brandOwner._id, { brandId: indianoil._id });
 
     console.log('[Seed] Seeding Branches with GeoJSON coordinates...');
     const [iocKoramangala, iocDelhi, dominosIndiranagar, dominosBandra, sbiMgRoad, shellWhitefield] =
@@ -287,7 +287,7 @@ const seedDatabase = async () => {
       resolvedAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
       resolutionNotes:
         'Area Operations Head conducted unannounced pest-control inspection. Branch deep-cleaned, all staff retrained on FSSAI hygiene standards, and full refund credited to customer.',
-      resolvedBy: brandAdmin._id,
+      resolvedBy: brandOwner._id,
       createdAt: new Date(Date.now() - 36 * 60 * 60 * 1000),
       timeline: [
         {
@@ -304,7 +304,7 @@ const seedDatabase = async () => {
         },
         {
           action: 'Complaint Resolved',
-          actor: 'Brand Admin (Grievance Desk Lead)',
+          actor: 'Brand Owner Desk',
           notes: 'Branch audit completed, staff sanctioned, customer compensated.',
           timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
         },
@@ -357,9 +357,9 @@ const seedDatabase = async () => {
 
     console.log('[Seed] Database seeding completed successfully! ✨');
     console.log('--- Test Accounts ---');
-    console.log('Customer: priya.sharma@example.com / password123');
-    console.log("Brand Admin: grievance.lead@dominos.com / password123");
-    console.log('Super Admin: admin@escalatehq.org / password123');
+    console.log('Customer (user): priya.sharma@example.com / password123');
+    console.log('Brand Owner (brandowner - Indian Oil): owner.indianoil@example.com / password123');
+    console.log('Platform Admin (admin): admin@escalatehq.org / password123');
   } catch (error) {
     console.error(`[Seed Error] Seeding failed: ${error.message}`);
     process.exit(1);

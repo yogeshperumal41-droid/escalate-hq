@@ -12,6 +12,13 @@ const { sendComplaintFiledEmail, sendEscalationAlertEmail } = require('../config
  */
 const createComplaint = async (req, res, next) => {
   try {
+    if (req.user.role !== 'user') {
+      return res.status(403).json({
+        success: false,
+        message: `Forbidden: Only customers with the 'user' role can submit complaints. Role '${req.user.role}' cannot file grievances.`,
+      });
+    }
+
     const {
       brandId,
       branchId,
@@ -367,10 +374,221 @@ const triggerCronEscalation = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc Get complaints filed by the currently logged in user
+ * @route GET /api/complaints/my-complaints
+ * @access Protected (user only)
+ */
+const getMyComplaints = async (req, res, next) => {
+  try {
+    const complaints = await Complaint.find({ userId: req.user._id })
+      .populate('brandId', 'name slug category logoUrl escalationEmail')
+      .populate('branchId', 'branchName address city state location ratingScore')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: complaints.length,
+      complaints,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc Fetch complaints belonging strictly to the logged-in brand owner's brand
+ * @route GET /api/complaints/my-brand
+ * @access Protected (brandowner only)
+ */
+const getMyBrandComplaints = async (req, res, next) => {
+  try {
+    if (!req.user.brandId) {
+      return res.status(400).json({
+        success: false,
+        message: 'No parent brand is linked to this brandowner account.',
+      });
+    }
+
+    const brandObjectId = req.user.brandId._id || req.user.brandId;
+    const { status, category } = req.query;
+    const query = { brandId: brandObjectId };
+
+    if (status && status !== 'All') query.status = status;
+    if (category && category !== 'All') query.category = category;
+
+    const complaints = await Complaint.find(query)
+      .populate('brandId', 'name slug category logoUrl escalationEmail')
+      .populate('branchId', 'branchName address city state location ratingScore')
+      .populate('userId', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: complaints.length,
+      complaints,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc Resolve complaint by brand owner (strictly verifies brandId match)
+ * @route PATCH /api/complaints/:id/resolve
+ * @access Protected (brandowner only)
+ */
+const resolveComplaintByBrandOwner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { resolutionNotes } = req.body;
+
+    if (!req.user.brandId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: No brand assigned to your brandowner account.',
+      });
+    }
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Complaint not found' });
+    }
+
+    const userBrandId = (req.user.brandId._id || req.user.brandId).toString();
+    const complaintBrandId = complaint.brandId.toString();
+
+    if (userBrandId !== complaintBrandId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You can only resolve complaints filed against your assigned brand.',
+      });
+    }
+
+    const previousStatus = complaint.status;
+    complaint.status = 'Resolved';
+    complaint.resolvedAt = new Date();
+    complaint.resolutionNotes = resolutionNotes || 'Grievance addressed and marked resolved by Brand Corporate Desk.';
+    complaint.resolvedBy = req.user._id;
+
+    if (previousStatus !== 'Resolved') {
+      await Brand.findByIdAndUpdate(complaint.brandId, { $inc: { resolvedCount: 1 } });
+      await Branch.findByIdAndUpdate(complaint.branchId, { $inc: { resolvedComplaints: 1 } });
+    }
+
+    complaint.timeline.push({
+      action: 'Complaint Resolved',
+      actor: `Brand Owner (${req.user.name})`,
+      notes: resolutionNotes || 'Official resolution recorded by Brand Owner.',
+      timestamp: new Date(),
+    });
+
+    await complaint.save();
+
+    const updated = await Complaint.findById(id)
+      .populate('brandId', 'name slug category logoUrl escalationEmail')
+      .populate('branchId', 'branchName address city state location ratingScore')
+      .populate('userId', 'name email');
+
+    res.status(200).json({
+      success: true,
+      message: 'Complaint marked as resolved successfully by Brand Owner.',
+      complaint: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc Force-escalate a complaint by admin
+ * @route PATCH /api/complaints/:id/escalate
+ * @access Protected (admin only)
+ */
+const escalateComplaintByAdmin = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Complaint not found' });
+    }
+
+    complaint.status = 'Escalated';
+    complaint.escalatedAt = new Date();
+    complaint.timeline.push({
+      action: 'Administrative Escalation',
+      actor: `Platform Admin (${req.user.name})`,
+      notes: reason || 'Ticket forcefully escalated to Executive Directorate by platform administrator.',
+      timestamp: new Date(),
+    });
+
+    await complaint.save();
+
+    const updated = await Complaint.findById(id)
+      .populate('brandId', 'name slug category logoUrl escalationEmail')
+      .populate('branchId', 'branchName address city state location ratingScore')
+      .populate('userId', 'name email');
+
+    res.status(200).json({
+      success: true,
+      message: 'Complaint forcefully escalated to Executive Directorate.',
+      complaint: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc Delete fake/spam complaint by admin
+ * @route DELETE /api/complaints/:id
+ * @access Protected (admin only)
+ */
+const deleteComplaintByAdmin = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Complaint not found' });
+    }
+
+    await Brand.findByIdAndUpdate(complaint.brandId, {
+      $inc: {
+        totalComplaints: -1,
+        ...(complaint.status === 'Resolved' ? { resolvedCount: -1 } : {}),
+      },
+    });
+
+    await Branch.findByIdAndUpdate(complaint.branchId, {
+      $inc: {
+        totalComplaints: -1,
+        ...(complaint.status === 'Resolved' ? { resolvedComplaints: -1 } : {}),
+      },
+    });
+
+    await Complaint.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Complaint ticket deleted successfully by administrator.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createComplaint,
   getComplaints,
   getComplaintById,
+  getMyComplaints,
+  getMyBrandComplaints,
+  resolveComplaintByBrandOwner,
+  escalateComplaintByAdmin,
+  deleteComplaintByAdmin,
   updateComplaintStatus,
   triggerCronEscalation,
 };

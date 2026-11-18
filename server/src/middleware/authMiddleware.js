@@ -22,7 +22,9 @@ const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-passwordHash');
+    const user = await User.findById(decoded.id)
+      .select('-passwordHash')
+      .populate('brandId', 'name slug category logoUrl escalationEmail');
 
     if (!user) {
       return res.status(401).json({
@@ -67,22 +69,33 @@ const optionalProtect = async (req, res, next) => {
 };
 
 /**
- * Restrict to certain user roles
+ * Restrict to certain user roles (returns 403 Forbidden on failure)
  */
-const authorize = (...roles) => {
+const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: `Forbidden: User role '${req.user ? req.user.role : 'unauthenticated'}' does not have permission for this action. Required: [${roles.join(', ')}]`,
+        message: 'Authentication required. Please log in.',
       });
     }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Forbidden: Access denied. Role '${req.user.role}' is not authorized for this resource. Required role(s): [${allowedRoles.join(', ')}]`,
+      });
+    }
+
     next();
   };
 };
+
+const authorize = authorizeRoles;
 
 module.exports = {
   protect,
   optionalProtect,
   authorize,
+  authorizeRoles,
 };

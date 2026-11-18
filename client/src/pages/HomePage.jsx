@@ -13,8 +13,10 @@ import ComplaintCard from '../components/ComplaintCard';
 import FilterBar from '../components/FilterBar';
 import ResolveModal from '../components/ResolveModal';
 import { complaintService, brandService, statsService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
+  const { user } = useAuth();
   const [complaints, setComplaints] = useState([]);
   const [brands, setBrands] = useState([]);
   const [metrics, setMetrics] = useState(null);
@@ -132,16 +134,36 @@ const HomePage = () => {
               Local franchise branches often ignore customer grievances. <strong>EscalateHQ</strong> bypasses store managers, delivers GPS-verified evidence directly to parent headquarters, and enforces an autonomous <strong>48-hour resolution SLA</strong>.
             </p>
 
-            {/* CTAs */}
+            {/* Role-Sensitive CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                to="/report"
-                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md shadow-rose-200 transition-all flex items-center justify-center gap-2 group"
-              >
-                <PlusCircle className="w-4 h-4 group-hover:rotate-90 transition-transform" />
-                <span>Report Franchise Incident Now</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              {user?.role === 'brandowner' ? (
+                <Link
+                  to="/brand-desk"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 group"
+                >
+                  <Building className="w-4 h-4" />
+                  <span>Go to Brand Ops Desk</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              ) : user?.role === 'admin' ? (
+                <Link
+                  to="/admin"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md shadow-rose-200 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>Open Admin Control Panel</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              ) : (
+                <Link
+                  to="/report"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md shadow-rose-200 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <PlusCircle className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+                  <span>Report Franchise Incident Now</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              )}
 
               <Link
                 to="/brands"

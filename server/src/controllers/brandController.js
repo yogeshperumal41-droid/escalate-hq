@@ -151,8 +151,33 @@ const createBrand = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc Delete parent brand
+ * @route DELETE /api/brands/:id
+ * @access Protected (admin only)
+ */
+const deleteBrand = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const brand = await Brand.findById(id);
+    if (!brand) {
+      return res.status(404).json({ success: false, message: 'Brand not found' });
+    }
+
+    await Brand.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: `Brand '${brand.name}' removed successfully.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getBrands,
   getBrandBySlug,
   createBrand,
+  deleteBrand,
 };

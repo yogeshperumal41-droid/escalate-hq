@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   ShieldCheck,
   MapPin,
@@ -11,24 +11,31 @@ import {
   Share2,
   X,
   Image as ImageIcon,
+  Trash2,
+  ShieldAlert,
 } from 'lucide-react';
 import StatusPill from '../components/StatusPill';
 import GpsVerificationBadge from '../components/GpsVerificationBadge';
 import ResolveModal from '../components/ResolveModal';
 import { complaintService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { formatDate, getCategoryColor } from '../utils/formatters';
 
 const ComplaintDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [actionNotice, setActionNotice] = useState('');
 
   const actionFromUrl = searchParams.get('action');
+  const tokenFromUrl = searchParams.get('token');
   const justReported = searchParams.get('justReported') === 'true';
 
   const fetchComplaint = async () => {
@@ -62,6 +69,33 @@ const ComplaintDetailPage = () => {
     setComplaint(updatedComplaint);
   };
 
+  const handleAdminEscalate = async () => {
+    try {
+      const res = await complaintService.escalateComplaint(id, {
+        reason: 'Ticket manually escalated by Platform Administrator from Case Detail view.',
+      });
+      if (res.data.success) {
+        setComplaint(res.data.complaint);
+        setActionNotice('Complaint has been forcefully escalated to Executive Directorate.');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to escalate ticket');
+    }
+  };
+
+  const handleAdminDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this grievance ticket?')) return;
+    try {
+      const res = await complaintService.deleteComplaint(id);
+      if (res.data.success) {
+        alert('Ticket deleted successfully.');
+        navigate('/admin');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete ticket');
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
@@ -90,6 +124,19 @@ const ComplaintDetailPage = () => {
   const brand = complaint.brandId || {};
   const branch = complaint.branchId || {};
   const categoryStyle = getCategoryColor(complaint.category);
+
+  // RBAC Permission checks
+  const isBrandOwnerOfTicket =
+    user?.role === 'brandowner' &&
+    (user?.brandId?._id || user?.brandId)?.toString() === (brand?._id || complaint?.brandId?._id || complaint?.brandId)?.toString();
+
+  const canResolve =
+    complaint.status !== 'Resolved' &&
+    (isBrandOwnerOfTicket || Boolean(tokenFromUrl) || user?.role === 'admin') &&
+    user?.role !== 'user';
+
+  const canForceEscalate = user?.role === 'admin' && complaint.status === 'Open';
+  const canDeleteTicket = user?.role === 'admin';
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 min-h-screen bg-slate-50">
@@ -153,16 +200,39 @@ const ComplaintDetailPage = () => {
             </h1>
           </div>
 
-          {/* Quick Resolve Button */}
-          {complaint.status !== 'Resolved' && (
-            <button
-              onClick={() => setIsResolveModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md flex items-center gap-2 transition-all self-start sm:self-auto shrink-0"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Mark Resolved</span>
-            </button>
-          )}
+          {/* RBAC Authorized Action Buttons */}
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+            {canResolve && (
+              <button
+                onClick={() => setIsResolveModalOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md flex items-center gap-2 transition-all"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Mark Resolved</span>
+              </button>
+            )}
+
+            {canForceEscalate && (
+              <button
+                onClick={handleAdminEscalate}
+                className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-all flex items-center gap-1.5"
+                title="Force-escalate ticket"
+              >
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <span>Force Escalate</span>
+              </button>
+            )}
+
+            {canDeleteTicket && (
+              <button
+                onClick={handleAdminDelete}
+                className="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all"
+                title="Delete ticket"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Brand & Branch Metas */}

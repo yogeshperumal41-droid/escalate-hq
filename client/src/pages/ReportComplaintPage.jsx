@@ -60,7 +60,23 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 const ReportComplaintPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/report' } });
+      return;
+    }
+    if (user?.role === 'brandowner') {
+      navigate('/brand-desk', { replace: true });
+      return;
+    }
+    if (user?.role === 'admin') {
+      navigate('/admin', { replace: true });
+      return;
+    }
+  }, [isAuthenticated, authLoading, user, navigate]);
 
   const [step, setStep] = useState(1);
   const [branches, setBranches] = useState([]);

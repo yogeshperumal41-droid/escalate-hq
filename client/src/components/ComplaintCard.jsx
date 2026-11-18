@@ -4,14 +4,22 @@ import { MapPin, Clock, ArrowRight, Image as ImageIcon, ChevronRight, X } from '
 import StatusPill from './StatusPill';
 import GpsVerificationBadge from './GpsVerificationBadge';
 import { timeAgo, getCategoryColor, getRemainingSlaHours } from '../utils/formatters';
+import { useAuth } from '../context/AuthContext';
 
 const ComplaintCard = ({ complaint, onResolveClick }) => {
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(null);
 
   const brand = complaint.brandId || {};
   const branch = complaint.branchId || {};
   const categoryStyle = getCategoryColor(complaint.category);
   const remainingHours = getRemainingSlaHours(complaint.createdAt, complaint.status);
+
+  // Check if current user is authorized to resolve this complaint
+  const isBrandOwnerOfTicket =
+    user?.role === 'brandowner' &&
+    (user?.brandId?._id || user?.brandId)?.toString() === (brand?._id || complaint?.brandId)?.toString();
+  const canResolveTicket = (isBrandOwnerOfTicket || user?.role === 'admin') && user?.role !== 'user';
 
   return (
     <div
@@ -170,7 +178,7 @@ const ComplaintCard = ({ complaint, onResolveClick }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          {onResolveClick && complaint.status !== 'Resolved' && (
+          {onResolveClick && canResolveTicket && complaint.status !== 'Resolved' && (
             <button
               onClick={() => onResolveClick(complaint)}
               className="text-xs px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold transition-colors"

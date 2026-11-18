@@ -43,6 +43,7 @@ export const brandService = {
   getBrands: (params) => api.get('/brands', { params }),
   getBrandBySlug: (slug) => api.get(`/brands/${slug}`),
   createBrand: (data) => api.post('/brands', data),
+  deleteBrand: (id) => api.delete(`/brands/${id}`),
 };
 
 export const branchService = {
@@ -60,8 +61,18 @@ export const complaintService = {
     }),
   getComplaints: (params) => api.get('/complaints', { params }),
   getComplaintById: (id) => api.get(`/complaints/${id}`),
+  getMyComplaints: () => api.get('/complaints/my-complaints'),
+  getMyBrandComplaints: (params) => api.get('/complaints/my-brand', { params }),
+  resolveMyBrandComplaint: (id, data) => api.patch(`/complaints/${id}/resolve`, data),
+  escalateComplaint: (id, data) => api.patch(`/complaints/${id}/escalate`, data),
+  deleteComplaint: (id) => api.delete(`/complaints/${id}`),
   updateStatus: (id, data) => api.patch(`/complaints/${id}/status`, data),
   triggerCron: () => api.post('/complaints/trigger-cron'),
+};
+
+export const adminService = {
+  getUsers: () => api.get('/admin/users'),
+  updateUserRole: (id, data) => api.patch(`/admin/users/${id}/role`, data),
 };
 
 export const statsService = {

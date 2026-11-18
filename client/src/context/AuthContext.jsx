@@ -92,8 +92,11 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         isAuthenticated: Boolean(user),
-        isBrandAdmin: user?.role === 'brand_admin',
-        isSuperAdmin: user?.role === 'super_admin',
+        isUser: user?.role === 'user',
+        isBrandOwner: user?.role === 'brandowner',
+        isAdmin: user?.role === 'admin',
+        isBrandAdmin: user?.role === 'brandowner',
+        isSuperAdmin: user?.role === 'admin',
         showDemoModal,
         setShowDemoModal,
       }}

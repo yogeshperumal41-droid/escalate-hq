@@ -4,9 +4,12 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import DemoSwitcherModal from './components/DemoSwitcherModal';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import HomePage from './pages/HomePage';
 import ReportComplaintPage from './pages/ReportComplaintPage';
+import MyComplaintsPage from './pages/MyComplaintsPage';
+import BrandOpsDeskPage from './pages/BrandOpsDeskPage';
 import BrandsListPage from './pages/BrandsListPage';
 import BrandScorecardPage from './pages/BrandScorecardPage';
 import ComplaintDetailPage from './pages/ComplaintDetailPage';
@@ -22,14 +25,52 @@ function App() {
           <Navbar />
           <div className="flex-1">
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
-              <Route path="/report" element={<ReportComplaintPage />} />
               <Route path="/brands" element={<BrandsListPage />} />
               <Route path="/brands/:slug" element={<BrandScorecardPage />} />
               <Route path="/complaints/:id" element={<ComplaintDetailPage />} />
-              <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+
+              {/* Customer Only Routes */}
+              <Route
+                path="/report"
+                element={
+                  <ProtectedRoute allowedRoles={['user']}>
+                    <ReportComplaintPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-complaints"
+                element={
+                  <ProtectedRoute allowedRoles={['user']}>
+                    <MyComplaintsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Brand Owner Only Routes */}
+              <Route
+                path="/brand-desk"
+                element={
+                  <ProtectedRoute allowedRoles={['brandowner']}>
+                    <BrandOpsDeskPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Admin Only Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
