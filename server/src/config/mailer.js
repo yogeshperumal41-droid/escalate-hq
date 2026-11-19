@@ -170,9 +170,81 @@ const sendEscalationAlertEmail = async ({ brand, branch, complaint, resolveUrl }
   }
 };
 
+/**
+ * Send urgent corporate audit alert when a franchise branch crosses critical complaint threshold on Google Maps
+ */
+const sendChronicFranchiseReportEmail = async ({
+  brand,
+  branch,
+  reporterName,
+  reporterEmail,
+  reason,
+  limitThreshold,
+  criticAlertsCount,
+}) => {
+  if (!transporter) await initMailer();
+
+  const toEmail = brand?.escalationEmail || 'grievance-directorate@franchise-corp.com';
+  const subject = `[CRITICAL FRANCHISE RADAR ALERT] ${branch.branchName} exceeded criticism threshold on Google Maps`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px;">
+      <div style="background: #1e293b; border-radius: 12px; padding: 28px; max-width: 620px; margin: 0 auto; border-top: 5px solid #dc2626;">
+        <h2 style="color: #f87171; margin-top: 0;">🚨 EscalateHQ: Chronic Franchise Criticism Alert</h2>
+        <p>This urgent transparency dispatch has been sent to <strong>${brand?.name || 'Corporate HQ'}</strong> Grievance Directorate.</p>
+        
+        <div style="background: #0f172a; border-radius: 8px; padding: 16px; margin: 18px 0; border: 1px solid #334155;">
+          <p style="margin: 4px 0;"><strong>Offending Branch:</strong> <span style="color: #fca5a5;">${branch.branchName}</span></p>
+          <p style="margin: 4px 0;"><strong>Address:</strong> ${branch.address}, ${branch.city} (${branch.state || 'India'})</p>
+          <p style="margin: 4px 0;"><strong>Google Place ID / Coordinates:</strong> ${branch.placeId || 'Coordinates: ' + (branch.location?.coordinates?.join(', ') || 'N/A')}</p>
+          <p style="margin: 4px 0;"><strong>Active Total Complaints:</strong> <span style="color: #ef4444; font-weight: bold;">${branch.totalComplaints} complaints</span> (Configured Critical Limit: ${limitThreshold})</p>
+          <p style="margin: 4px 0;"><strong>Google Maps Rating:</strong> <span style="color: #f59e0b; font-weight: bold;">${branch.ratingScore} / 5.0 ★</span></p>
+          <p style="margin: 4px 0;"><strong>Radar Report Count:</strong> <span style="color: #f87171;">#${criticAlertsCount} Notice</span></p>
+        </div>
+
+        <h3 style="color: #fbbf24;">Complainant Report / Audit Summary:</h3>
+        <p style="background: #334155; padding: 12px; border-radius: 6px; font-style: italic; color: #f1f5f9;">
+          "${reason || 'Continuous customer complaints and service failure have crossed safe threshold limit.'}"
+        </p>
+
+        <p style="color: #cbd5e1; font-size: 13px;">
+          Reported by: <strong>${reporterName || 'Concerned Consumer'}</strong> ${reporterEmail ? `(${reporterEmail})` : ''} via Google Maps Grievance Radar.
+        </p>
+
+        <div style="background: #451a03; border-left: 4px solid #f97316; padding: 12px; margin: 18px 0; border-radius: 4px; color: #fed7aa; font-size: 13px;">
+          <strong>Action Required:</strong> Franchise brand operations must conduct an immediate branch audit, inspect staff conduct, and submit a corrective resolution plan on the EscalateHQ Brand Ops Desk.
+        </div>
+      </div>
+    </div>
+  `;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"EscalateHQ Radar" <${process.env.FROM_EMAIL || 'grievance@escalatehq.org'}>`,
+      to: toEmail,
+      subject,
+      html,
+    });
+
+    emailLogs.unshift({
+      to: toEmail,
+      subject,
+      type: 'CHRONIC_FRANCHISE_RADAR_ALERT',
+      branchName: branch.branchName,
+      brandName: brand?.name,
+      sentAt: new Date(),
+    });
+
+    return info;
+  } catch (err) {
+    console.error(`[Email Error] Failed to send chronic franchise alert: ${err.message}`);
+  }
+};
+
 module.exports = {
   initMailer,
   sendComplaintFiledEmail,
   sendEscalationAlertEmail,
+  sendChronicFranchiseReportEmail,
   getEmailLogs: () => emailLogs,
 };

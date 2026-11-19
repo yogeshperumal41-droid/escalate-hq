@@ -231,13 +231,22 @@ const BrandScorecardPage = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-xs font-bold text-rose-600 block">
-                        {b.totalComplaints} complaint{b.totalComplaints !== 1 ? 's' : ''}
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        Rating: {b.ratingScore}★
-                      </span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-bold text-rose-600 block">
+                          {b.totalComplaints} complaint{b.totalComplaints !== 1 ? 's' : ''}
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-medium">
+                          Rating: {b.ratingScore}★
+                        </span>
+                      </div>
+                      <Link
+                        to="/radar"
+                        title="View on Google Maps Radar & Report Chronic Branch to HQ"
+                        className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold shrink-0 transition-colors"
+                      >
+                        Radar Map →
+                      </Link>
                     </div>
                   </div>
                 ))}

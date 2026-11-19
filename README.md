@@ -125,9 +125,9 @@ The UI includes a **1-Click Persona Switcher** in the top navigation bar:
 
 | Role | Email | Password | Privileges |
 |---|---|---|---|
-| **Consumer** | `priya.sharma@example.com` | `password123` | File grievances, upload receipts, GPS proximity check |
-| **Brand Admin** | `grievance.lead@dominos.com` | `password123` | Review & resolve franchise branch tickets, add audit notes |
-| **Super Admin** | `admin@escalatehq.org` | `password123` | Platform oversight, SLA monitoring, trigger cron tests |
+| **Consumer (`user`)** | `user@example.com` | `password123` | File grievances, upload receipts, GPS proximity check, access My Complaints |
+| **Brand Owner (`brandowner`)** | `owner.indianoil@example.com` | `password123` | Access Brand Ops Desk, review & resolve brand branch tickets, add audit notes |
+| **Platform Admin (`admin`)** | `admin@escalatehq.org` | `password123` | Platform oversight, assign brands to owners, moderate spam tickets, SLA monitoring |
 
 ---
 
@@ -139,9 +139,14 @@ The UI includes a **1-Click Persona Switcher** in the top navigation bar:
 | `POST` | `/api/auth/login` | Public | Sign in and retrieve JWT token |
 | `GET` | `/api/brands` | Public | List parent brands with resolution stats |
 | `GET` | `/api/brands/:slug` | Public | Detailed brand scorecard & branch benchmarks |
+| `GET` | `/api/branches/critical` | Public | Google Maps Grievance Radar (chronic branches exceeding complaint limits) |
+| `POST` | `/api/branches/:id/report-critical` | Public / User | Report chronic franchise branch exceeding limit to Corporate HQ |
 | `POST` | `/api/branches/find-or-create`| Public | Match or save franchise branch with GeoJSON coordinates |
-| `POST` | `/api/complaints` | Protected | Multipart upload proof to S3, check GPS, dispatch email |
+| `POST` | `/api/complaints` | User Only | Multipart upload proof, check GPS, dispatch email |
 | `GET` | `/api/complaints` | Public | Filtered feed (city, brand, category, status, GPS-verified) |
+| `GET` | `/api/complaints/my-complaints` | User Only | View customer's personal filed grievances |
+| `GET` | `/api/complaints/my-brand` | Brand Owner Only | Review grievances strictly for assigned parent brand |
+| `PATCH` | `/api/complaints/:id/resolve` | Brand Owner Only | Resolve complaint with corporate action note |
 | `GET` | `/api/complaints/:id` | Public | Ticket detail, timeline audit trail & evidence gallery |
 | `PATCH` | `/api/complaints/:id/status`| Token/Auth | Update ticket status (`Resolved` / `Escalated`) |
 | `POST` | `/api/complaints/trigger-cron`| Admin/Dev | Manually execute 48-hour SLA escalation check |

@@ -14,6 +14,7 @@ import BrandsListPage from './pages/BrandsListPage';
 import BrandScorecardPage from './pages/BrandScorecardPage';
 import ComplaintDetailPage from './pages/ComplaintDetailPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import CriticalFranchiseMapPage from './pages/CriticalFranchiseMapPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
@@ -29,6 +30,8 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/brands" element={<BrandsListPage />} />
               <Route path="/brands/:slug" element={<BrandScorecardPage />} />
+              <Route path="/radar" element={<CriticalFranchiseMapPage />} />
+              <Route path="/map" element={<Navigate to="/radar" replace />} />
               <Route path="/complaints/:id" element={<ComplaintDetailPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />

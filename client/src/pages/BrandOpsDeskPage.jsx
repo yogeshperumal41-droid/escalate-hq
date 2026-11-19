@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
   Building,
   Clock,
@@ -21,6 +21,12 @@ import { formatDate, timeAgo, getRemainingSlaHours, getCategoryColor } from '../
 
 const BrandOpsDeskPage = () => {
   const { user } = useAuth();
+
+  // Strict role protection: Standard users or non-brandowners cannot access Brand Ops Desk
+  if (user?.role !== 'brandowner') {
+    return <Navigate to="/my-complaints" replace />;
+  }
+
   const [complaints, setComplaints] = useState([]);
   const [brandInfo, setBrandInfo] = useState(user?.brandId || null);
   const [loading, setLoading] = useState(true);

@@ -205,7 +205,7 @@ const ReportComplaintPage = () => {
     setError('');
 
     if (!isAuthenticated) {
-      await login('priya.sharma@example.com', 'password123');
+      await login('user@example.com', 'password123');
     }
 
     if (!selectedBranch && !customBranchMode) {

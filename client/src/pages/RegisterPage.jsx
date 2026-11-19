@@ -58,7 +58,7 @@ const RegisterPage = () => {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Priya Sharma"
+                placeholder="e.g. Alex User"
                 className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-rose-500 hover:border-slate-400 transition-colors"
               />
             </div>

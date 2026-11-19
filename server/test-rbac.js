@@ -39,12 +39,12 @@ async function runTests() {
     const userRes = await req('/auth/login', {
       method: 'POST',
       body: JSON.stringify({
-        email: 'priya.sharma@example.com',
+        email: 'user@example.com',
         password: 'password123',
       }),
     });
     const userToken = userRes.data.token;
-    assert(userRes.data.user.role === 'user', "Priya Sharma has role 'user'");
+    assert(userRes.data.user.role === 'user', "User has role 'user'");
 
     const ownerRes = await req('/auth/login', {
       method: 'POST',
@@ -273,6 +273,26 @@ async function runTests() {
         headers: { Authorization: `Bearer ${adminToken}` },
       });
       assert(delTicketRes.status === 200, 'Admin CAN delete spam ticket (200 OK)');
+    }
+
+    console.log('\n--- 5. GOOGLE MAP CRITICAL FRANCHISE RADAR TESTS ---');
+    // Test 5a: Fetch critical branches with threshold limit = 3
+    const critRes = await req('/branches/critical?limit=3');
+    assert(critRes.status === 200 && Array.isArray(critRes.data.branches), 'Public CAN fetch critical branches list on radar (200 OK)');
+    assert(critRes.data.metrics && critRes.data.metrics.criticalLimitThreshold === 3, 'Radar correctly computes limit threshold metrics');
+
+    // Test 5b: Report a chronic branch exceeding limit
+    if (critRes.data.branches?.length > 0) {
+      const targetBranch = critRes.data.branches[0];
+      const reportRes = await req(`/branches/${targetBranch._id}/report-critical`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${userToken}` },
+        body: JSON.stringify({
+          reason: 'Severe recurring issues with staff overcharging and attitude. Limit exceeded.',
+          limitThreshold: 3,
+        }),
+      });
+      assert(reportRes.status === 200 && reportRes.data.success, 'User CAN report chronic franchise exceeding critical limit to corporate HQ (200 OK)');
     }
 
     console.log('\n==================================================');

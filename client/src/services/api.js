@@ -50,6 +50,8 @@ export const branchService = {
   findOrCreateBranch: (data) => api.post('/branches/find-or-create', data),
   getBranches: (params) => api.get('/branches', { params }),
   getBranchById: (id) => api.get(`/branches/${id}`),
+  getCriticalBranches: (params) => api.get('/branches/critical', { params }),
+  reportCriticalBranch: (id, data) => api.post(`/branches/${id}/report-critical`, data),
 };
 
 export const complaintService = {

@@ -138,6 +138,8 @@ const getBranches = async (req, res, next) => {
   }
 };
 
+const { sendChronicFranchiseReportEmail } = require('../config/mailer');
+
 /**
  * @desc Get single branch by ID with recent complaints
  * @route GET /api/branches/:id
@@ -162,8 +164,151 @@ const getBranchById = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc Get chronically criticized franchise branches on Google Maps radar
+ * @route GET /api/branches/critical
+ * @access Public
+ */
+const getCriticalBranches = async (req, res, next) => {
+  try {
+    const limit = Math.max(1, parseInt(req.query.limit, 10) || 3);
+    const { city, brandId, onlyExceeded } = req.query;
+
+    const filter = {};
+    if (brandId) filter.brandId = brandId;
+    if (city && city !== 'All') filter.city = { $regex: city, $options: 'i' };
+
+    const allBranches = await Branch.find(filter)
+      .populate('brandId', 'name slug logoUrl category escalationEmail')
+      .sort({ totalComplaints: -1, ratingScore: 1 });
+
+    const processedBranches = allBranches.map((b) => {
+      const bObj = b.toObject();
+      const isLimitExceeded =
+        b.totalComplaints >= limit || b.isCriticallyFlagged || (b.ratingScore && b.ratingScore <= 2.8);
+      return {
+        ...bObj,
+        isLimitExceeded,
+        criticalLimitThreshold: limit,
+      };
+    });
+
+    const finalBranches =
+      onlyExceeded === 'true'
+        ? processedBranches.filter((b) => b.isLimitExceeded)
+        : processedBranches;
+
+    const exceededBranches = processedBranches.filter((b) => b.isLimitExceeded);
+
+    // Calculate city frequency
+    const cityCounts = {};
+    exceededBranches.forEach((b) => {
+      cityCounts[b.city] = (cityCounts[b.city] || 0) + 1;
+    });
+    const topCity = Object.entries(cityCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+    const totalCorporateAlerts = processedBranches.reduce(
+      (acc, curr) => acc + (curr.criticAlertsCount || 0),
+      0
+    );
+
+    res.status(200).json({
+      success: true,
+      count: finalBranches.length,
+      limitThreshold: limit,
+      metrics: {
+        totalMonitoredBranches: allBranches.length,
+        criticalLimitThreshold: limit,
+        exceededBranchesCount: exceededBranches.length,
+        totalComplaintsInCritical: exceededBranches.reduce(
+          (acc, b) => acc + (b.totalComplaints || 0),
+          0
+        ),
+        topCriticizedCity: topCity,
+        totalCorporateAlertsDispatched: totalCorporateAlerts,
+      },
+      branches: finalBranches,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc Report a chronically criticized franchise branch that crossed threshold on Google Maps
+ * @route POST /api/branches/:id/report-critical
+ * @access Public / Authenticated
+ */
+const reportCriticalBranch = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { reason, limitThreshold = 3, reporterName, reporterEmail } = req.body;
+
+    const branch = await Branch.findById(id).populate(
+      'brandId',
+      'name slug logoUrl escalationEmail'
+    );
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: 'Franchise branch not found',
+      });
+    }
+
+    const reporterActualName =
+      req.user?.name || reporterName || 'Concerned Consumer';
+    const reporterActualEmail =
+      req.user?.email || reporterEmail || 'consumer@escalatehq.org';
+
+    // Increment alerts count and flag as critical
+    branch.criticAlertsCount = (branch.criticAlertsCount || 0) + 1;
+    branch.isCriticallyFlagged = true;
+    branch.lastCriticalReportAt = new Date();
+
+    if (!branch.criticalReports) {
+      branch.criticalReports = [];
+    }
+
+    branch.criticalReports.push({
+      reportedBy: req.user?._id || null,
+      reporterName: reporterActualName,
+      reason:
+        reason ||
+        `Branch has received ${branch.totalComplaints} continuous grievances, exceeding configured tolerance threshold of ${limitThreshold} on Google Maps radar.`,
+      limitThreshold: Number(limitThreshold) || 3,
+      reportedAt: new Date(),
+    });
+
+    await branch.save();
+
+    // Trigger urgent email to the parent brand's corporate escalation desk
+    await sendChronicFranchiseReportEmail({
+      brand: branch.brandId,
+      branch,
+      reporterName: reporterActualName,
+      reporterEmail: reporterActualEmail,
+      reason:
+        reason ||
+        `Branch exceeds critical complaint tolerance limit (${branch.totalComplaints} complaints vs threshold ${limitThreshold}). Urgent regional audit requested.`,
+      limitThreshold,
+      criticAlertsCount: branch.criticAlertsCount,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Critical grievance notice dispatched to ${branch.brandId?.name || 'Corporate HQ'} escalation directorate.`,
+      branch,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   findOrCreateBranch,
   getBranches,
   getBranchById,
+  getCriticalBranches,
+  reportCriticalBranch,
 };

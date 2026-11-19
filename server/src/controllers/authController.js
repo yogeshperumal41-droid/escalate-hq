@@ -143,8 +143,8 @@ const getDemoAccounts = async (req, res) => {
     accounts: [
       {
         role: 'user',
-        label: 'Consumer / Complainant',
-        email: 'priya.sharma@example.com',
+        label: 'Consumer / User',
+        email: 'user@example.com',
         password: 'password123',
         description: 'Files grievances with GPS proof & tracks personal cases',
       },

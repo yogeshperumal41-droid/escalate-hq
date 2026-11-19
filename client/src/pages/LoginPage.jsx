@@ -63,10 +63,10 @@ const LoginPage = () => {
           <div className="grid grid-cols-1 gap-1.5">
             <button
               type="button"
-              onClick={() => fillDemo('priya.sharma@example.com', 'password123')}
+              onClick={() => fillDemo('user@example.com', 'password123')}
               className="text-left px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-800 transition-colors flex items-center justify-between text-[11px] border border-slate-200 shadow-xs"
             >
-              <span className="font-semibold">Consumer (Priya)</span>
+              <span className="font-semibold">Consumer (User)</span>
               <span className="text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded font-mono font-bold">user</span>
             </button>
             <button

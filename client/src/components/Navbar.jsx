@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Sparkles,
+  MapPin,
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -143,6 +144,19 @@ const Navbar = () => {
           >
             <BarChart3 className="w-4 h-4" />
             <span>Brand Scorecards</span>
+          </Link>
+
+          {/* Franchise Map / Grievance Radar: Visible to all */}
+          <Link
+            to="/radar"
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              isActive('/radar')
+                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <MapPin className="w-4 h-4 text-rose-600" />
+            <span>Franchise Map</span>
           </Link>
         </nav>
 
@@ -289,6 +303,14 @@ const Navbar = () => {
             className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             Brand Scorecards
+          </Link>
+
+          <Link
+            to="/radar"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-xl text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200"
+          >
+            Franchise Map (Grievance Radar)
           </Link>
 
           <div className="pt-3 border-t border-slate-200 flex items-center justify-between">

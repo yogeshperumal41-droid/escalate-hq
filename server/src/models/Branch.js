@@ -59,6 +59,42 @@ const branchSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    criticAlertsCount: {
+      type: Number,
+      default: 0,
+    },
+    isCriticallyFlagged: {
+      type: Boolean,
+      default: false,
+    },
+    lastCriticalReportAt: {
+      type: Date,
+      default: null,
+    },
+    criticalReports: [
+      {
+        reportedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+        },
+        reporterName: {
+          type: String,
+          default: 'Consumer User',
+        },
+        reason: {
+          type: String,
+          default: 'Chronic complaints limit exceeded on Google Maps',
+        },
+        limitThreshold: {
+          type: Number,
+          default: 3,
+        },
+        reportedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     createdAt: {
       type: Date,
       default: Date.now,

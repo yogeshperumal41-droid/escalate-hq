@@ -27,8 +27,8 @@ const seedDatabase = async () => {
 
     const [user1, user2, brandOwner, adminUser] = await User.create([
       {
-        name: 'Priya Sharma',
-        email: 'priya.sharma@example.com',
+        name: 'User',
+        email: 'user@example.com',
         passwordHash,
         role: 'user',
       },
@@ -215,7 +215,7 @@ const seedDatabase = async () => {
       timeline: [
         {
           action: 'Complaint Registered',
-          actor: 'Priya Sharma',
+          actor: 'User',
           notes: 'Verified on-site via device GPS (32m from pump).',
           timestamp: new Date(Date.now() - 14 * 60 * 60 * 1000),
         },
@@ -292,7 +292,7 @@ const seedDatabase = async () => {
       timeline: [
         {
           action: 'Complaint Registered',
-          actor: 'Priya Sharma',
+          actor: 'User',
           notes: 'Verified on-site via device GPS (28m from store).',
           timestamp: new Date(Date.now() - 36 * 60 * 60 * 1000),
         },
@@ -345,19 +345,49 @@ const seedDatabase = async () => {
     });
 
     // Update brand & branch aggregate counts
-    await indianoil.updateOne({ totalComplaints: 1, resolvedCount: 0 });
-    await sbi.updateOne({ totalComplaints: 1, resolvedCount: 0 });
-    await dominos.updateOne({ totalComplaints: 1, resolvedCount: 1 });
+    await indianoil.updateOne({ totalComplaints: 4, resolvedCount: 0 });
+    await sbi.updateOne({ totalComplaints: 3, resolvedCount: 0 });
+    await dominos.updateOne({ totalComplaints: 2, resolvedCount: 1 });
     await shell.updateOne({ totalComplaints: 1, resolvedCount: 0 });
 
-    await iocKoramangala.updateOne({ totalComplaints: 1, resolvedComplaints: 0 });
-    await sbiMgRoad.updateOne({ totalComplaints: 1, resolvedComplaints: 0 });
-    await dominosIndiranagar.updateOne({ totalComplaints: 1, resolvedComplaints: 1 });
+    await iocKoramangala.updateOne({
+      totalComplaints: 4,
+      resolvedComplaints: 0,
+      isCriticallyFlagged: true,
+      criticAlertsCount: 2,
+      lastCriticalReportAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      criticalReports: [
+        {
+          reportedBy: user1._id,
+          reporterName: 'User',
+          reason: 'Continuous petrol adulteration and rude cashier behavior on Koramangala 80ft Road.',
+          limitThreshold: 3,
+          reportedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        },
+      ],
+    });
+    await sbiMgRoad.updateOne({
+      totalComplaints: 3,
+      resolvedComplaints: 0,
+      isCriticallyFlagged: true,
+      criticAlertsCount: 1,
+      lastCriticalReportAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+      criticalReports: [
+        {
+          reportedBy: user2._id,
+          reporterName: 'Rahul Varma',
+          reason: 'Severe service delays and uncooperative staff at SBI MG Road main branch.',
+          limitThreshold: 3,
+          reportedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+        },
+      ],
+    });
+    await dominosIndiranagar.updateOne({ totalComplaints: 2, resolvedComplaints: 1 });
     await shellWhitefield.updateOne({ totalComplaints: 1, resolvedComplaints: 0 });
 
     console.log('[Seed] Database seeding completed successfully! ✨');
     console.log('--- Test Accounts ---');
-    console.log('Customer (user): priya.sharma@example.com / password123');
+    console.log('Customer (user): user@example.com / password123');
     console.log('Brand Owner (brandowner - Indian Oil): owner.indianoil@example.com / password123');
     console.log('Platform Admin (admin): admin@escalatehq.org / password123');
   } catch (error) {

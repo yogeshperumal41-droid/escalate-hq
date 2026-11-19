@@ -8,6 +8,8 @@ import {
   AlertTriangle,
   Building,
   PlusCircle,
+  MapPin,
+  Flame,
 } from 'lucide-react';
 import ComplaintCard from '../components/ComplaintCard';
 import FilterBar from '../components/FilterBar';
@@ -224,6 +226,32 @@ const HomePage = () => {
 
       {/* Main Content: Filter & Complaints Feed */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Google Maps Grievance Radar Spotlight */}
+        <div className="mb-10 bg-gradient-to-r from-rose-600 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-xs text-xs font-bold uppercase tracking-wider mb-3">
+                <Flame className="w-3.5 h-3.5 text-amber-300" />
+                <span>Google Maps Grievance Radar</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-2">
+                Spot Chronically Criticized Franchise Branches
+              </h3>
+              <p className="text-xs sm:text-sm text-rose-100 leading-relaxed">
+                When franchise branches repeatedly receive rude staff or overcharging complaints crossing corporate limits, they appear on our live Google Maps radar. Consumers can view exact branch coordinates and officially report chronic offenders to corporate headquarters.
+              </p>
+            </div>
+            <Link
+              to="/radar"
+              className="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-100 text-rose-600 font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 shrink-0 transition-transform hover:scale-105"
+            >
+              <MapPin className="w-4 h-4 text-rose-600" />
+              <span>Explore Franchise Map & Radar</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900">

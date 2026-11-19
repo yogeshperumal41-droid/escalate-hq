@@ -6,14 +6,14 @@ import { UserCheck, Shield, Building, X, Sparkles } from 'lucide-react';
 const ACCOUNTS = [
   {
     role: 'user',
-    name: 'Priya Sharma',
-    email: 'priya.sharma@example.com',
+    name: 'User',
+    email: 'user@example.com',
     password: 'password123',
     icon: UserCheck,
     title: 'Regular Customer (user)',
     badge: 'role: user',
     badgeColor: 'bg-sky-50 text-sky-700 border-sky-200',
-    description: 'Can file grievances, upload receipt proofs, verify GPS, and view My Complaints.',
+    description: 'Can file grievances, upload receipt proofs, verify GPS, and view My Complaints. Has no access to Brand Ops Desk.',
   },
   {
     role: 'brandowner',
